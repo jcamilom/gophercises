@@ -4,35 +4,29 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"strings"
+	"os"
 )
-
-type QuizItem struct {
-	Question, Answer string
-}
 
 func main() {
 
-	quizFilename := flag.String("qf", "problems.csv", "The name of the quiz file")
+	quizFilename := flag.String("qf", "problems.csv", "a csv file in the format of 'question,answer'")
 	flag.Parse()
 
-	c, err := ioutil.ReadFile(*quizFilename)
+	file, err := os.Open(*quizFilename)
 	if err != nil {
-		panic(err)
+		exit(fmt.Sprintf("Failed to open the CSV file '%s'.\n", *quizFilename))
 	}
 
-	r := csv.NewReader(strings.NewReader(string(c)))
+	r := csv.NewReader(file)
 
 	records, err := r.ReadAll()
 	if err != nil {
-		panic(err)
+		exit("Failed to parse the provided CSV file.")
 	}
 
 	quiz := make([]QuizItem, len(records))
 	for i, v := range records {
-		quiz[i].Question = v[0]
-		quiz[i].Answer = v[1]
+		quiz[i] = QuizItem{Question: v[0], Answer: v[1]}
 	}
 
 	var ans string
@@ -47,4 +41,13 @@ func main() {
 	}
 
 	fmt.Printf("Correct answers: %v/%v\n", correctAns, len(quiz))
+}
+
+type QuizItem struct {
+	Question, Answer string
+}
+
+func exit(msg string) {
+	fmt.Println(msg)
+	os.Exit(1)
 }
