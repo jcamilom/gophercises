@@ -41,6 +41,10 @@ func main() {
 
 }
 
+// Updated chapter parsing function. Technically you don't
+// *have* to get the story from the path (it could be a
+// header or anything else) but I'm not going to rename this
+// since "path" is what we used in the videos.
 func pathFn(r *http.Request) string {
 	path := strings.TrimSpace(r.URL.Path)
 	if path == "/story" || path == "/story/" {
@@ -49,6 +53,7 @@ func pathFn(r *http.Request) string {
 	return path[len("/story/"):]
 }
 
+// Slightly altered tempalte to show how this feature works
 var storyTmpl = `
 <!DOCTYPE html>
 <html>
