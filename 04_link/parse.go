@@ -1,7 +1,6 @@
 package link
 
 import (
-	"fmt"
 	"io"
 	"strings"
 
@@ -45,8 +44,21 @@ func buildLink(node *html.Node) Link {
 			break
 		}
 	}
-	ret.Text = "TODO: Parse the text..."
+	ret.Text = text(node)
 	return ret
+}
+
+func text(node *html.Node) string {
+	if node.Type == html.TextNode {
+		return node.Data
+	} else if node.Type != html.ElementNode {
+		return ""
+	}
+	var ret string
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		ret += text(c) + " "
+	}
+	return strings.Join(strings.Fields(ret), " ")
 }
 
 func linkNodes(node *html.Node) []*html.Node {
@@ -58,17 +70,6 @@ func linkNodes(node *html.Node) []*html.Node {
 		ret = append(ret, linkNodes(c)...)
 	}
 	return ret
-}
-
-func dfs(node *html.Node, padding string) {
-	msg := node.Data
-	if node.Type == html.ElementNode {
-		msg = "<" + msg + ">"
-	}
-	fmt.Println(padding, msg)
-	for c := node.FirstChild; c != nil; c = c.NextSibling {
-		dfs(c, padding+"  ")
-	}
 }
 
 // LinkParser searchs for links inside the three of the passed node.
