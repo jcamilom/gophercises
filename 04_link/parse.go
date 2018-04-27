@@ -21,8 +21,12 @@ func Parse(r io.Reader) ([]Link, error) {
 	if err != nil {
 		return nil, err
 	}
+	nodes := linkNodes(doc)
+	for _, node := range nodes {
+		fmt.Println(node)
+	}
 
-	dfs(doc, "")
+	//dfs(doc, "")
 
 	//links := make([]Link, 0, 5) // Slice to store the links
 
@@ -30,6 +34,17 @@ func Parse(r io.Reader) ([]Link, error) {
 
 	//fmt.Printf("\n%+v\n", links)
 	return nil, nil
+}
+
+func linkNodes(node *html.Node) []*html.Node {
+	if node.Type == html.ElementNode && node.Data == "a" {
+		return []*html.Node{node}
+	}
+	var ret []*html.Node
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		ret = append(ret, linkNodes(c)...)
+	}
+	return ret
 }
 
 func dfs(node *html.Node, padding string) {
