@@ -17,7 +17,7 @@ type Link struct {
 
 func main() {
 
-	r, err := os.Open("ex2.html")
+	r, err := os.Open("ex1.html")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func main() {
 
 }
 
-// LinkParser searchs for links inside the three of the passed node
+// LinkParser searchs for links inside the three of the passed node.
 func LinkParser(node *html.Node, links *[]Link) {
 	if node.Type == html.ElementNode && node.Data == "a" {
 		// Extract the text from the link
@@ -56,28 +56,31 @@ func LinkParser(node *html.Node, links *[]Link) {
 	//fmt.Printf("==\n%v ---> %+v\n==\n", &node, node)
 }
 
-// Extracts the text inside the <a></a> element and returns it
+// extractTextFromLink extracts the text nested in the HTML element and returns it.
 func extractTextFromLink(node *html.Node) (text string) {
-	for linkChild := node.FirstChild; linkChild != nil; linkChild = linkChild.NextSibling {
-		if linkChild.Parent.Data == "a" {
-			fmt.Printf("==\n%+v\n==\nParentData: %v\n", linkChild, linkChild.Parent.Attr[0].Val)
-		}
-		if trimedData := strings.TrimSpace(linkChild.Data); linkChild.Type == html.TextNode && len(trimedData) > 0 {
-			//fmt.Printf("\n\ntext=%v, len=%v\n\n", trimedData, len(trimedData))
-			if text == "" {
-				text = trimedData
-			} else {
-				text += " " + trimedData
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		/* if child.Parent.Data == "a" {
+			fmt.Printf("==\n%+v\n==\nParentData: %v\n", child, child.Parent.Attr[0].Val)
+		} */
+		if child.Type == html.TextNode {
+			// Calls the join function if there is something to join
+			if trimedData := strings.TrimSpace(child.Data); len(trimedData) > 0 {
+				//fmt.Printf("\n\ntext=%v, len=%v\n\n", trimedData, len(trimedData))
+				text = joinStrings(text, trimedData)
+				//fmt.Println(text)
 			}
-			//fmt.Println(text)
-		}
-		if text2 := extractTextFromLink(linkChild); text2 != "" {
-			if text == "" {
-				text = text2
-			} else {
-				text += " " + text2
-			}
+		} else if textFromChilds := extractTextFromLink(child); textFromChilds != "" {
+			// This previous "if" calls the join function if there is something to join
+			text = joinStrings(text, textFromChilds)
 		}
 	}
 	return
+}
+
+// joinString joins two strings and place a whitespace in between, when needed.
+func joinStrings(a, b string) string {
+	if a == "" {
+		return b
+	}
+	return a + " " + b
 }
