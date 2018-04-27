@@ -25,14 +25,6 @@ func Parse(r io.Reader) ([]Link, error) {
 	for _, node := range nodes {
 		links = append(links, buildLink(node))
 	}
-
-	//dfs(doc, "")
-
-	//links := make([]Link, 0, 5) // Slice to store the links
-
-	//LinkParser(doc, &links)
-
-	//fmt.Printf("\n%+v\n", links)
 	return links, nil
 }
 
@@ -56,7 +48,7 @@ func text(node *html.Node) string {
 	}
 	var ret string
 	for c := node.FirstChild; c != nil; c = c.NextSibling {
-		ret += text(c) + " "
+		ret += text(c)
 	}
 	return strings.Join(strings.Fields(ret), " ")
 }
@@ -70,54 +62,4 @@ func linkNodes(node *html.Node) []*html.Node {
 		ret = append(ret, linkNodes(c)...)
 	}
 	return ret
-}
-
-// LinkParser searchs for links inside the three of the passed node.
-func LinkParser(node *html.Node, links *[]Link) {
-	if node.Type == html.ElementNode && node.Data == "a" {
-		// Extract the text from the link
-		text := extractTextFromLink(node)
-		// Get the link
-		for _, att := range node.Attr {
-			// Gets the attribute "href" and stores it in the slice
-			if att.Key == "href" {
-				*links = append(*links, Link{Href: att.Val, Text: text})
-			}
-		}
-		//fmt.Printf("==\n%+v\n==\n", node)
-	} else {
-		for child := node.FirstChild; child != nil; child = child.NextSibling {
-			LinkParser(child, links)
-		}
-	}
-	//fmt.Printf("==\n%v ---> %+v\n==\n", &node, node)
-}
-
-// extractTextFromLink extracts the text nested in the HTML element and returns it.
-func extractTextFromLink(node *html.Node) (text string) {
-	for child := node.FirstChild; child != nil; child = child.NextSibling {
-		/* if child.Parent.Data == "a" {
-			fmt.Printf("==\n%+v\n==\nParentData: %v\n", child, child.Parent.Attr[0].Val)
-		} */
-		if child.Type == html.TextNode {
-			// Calls the join function if there is something to join
-			if trimedData := strings.TrimSpace(child.Data); len(trimedData) > 0 {
-				//fmt.Printf("\n\ntext=%v, len=%v\n\n", trimedData, len(trimedData))
-				text = joinStrings(text, trimedData)
-				//fmt.Println(text)
-			}
-		} else if textFromChilds := extractTextFromLink(child); textFromChilds != "" {
-			// This previous "if" calls the join function if there is something to join
-			text = joinStrings(text, textFromChilds)
-		}
-	}
-	return
-}
-
-// joinString joins two strings and place a whitespace in between, when needed.
-func joinStrings(a, b string) string {
-	if a == "" {
-		return b
-	}
-	return a + " " + b
 }
