@@ -1,6 +1,7 @@
 package link
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
@@ -16,22 +17,30 @@ type Link struct {
 // Parse will take in an HTML document and will return a
 // slice of links parsed from it.
 func Parse(r io.Reader) ([]Link, error) {
-	/* r, err := os.Open("ex1.html")
-	if err != nil {
-		log.Fatal(err)
-	} */
-
 	doc, err := html.Parse(r)
 	if err != nil {
 		return nil, err
 	}
 
-	links := make([]Link, 0, 5) // Slice to store the links
+	dfs(doc, "")
 
-	LinkParser(doc, &links)
+	//links := make([]Link, 0, 5) // Slice to store the links
+
+	//LinkParser(doc, &links)
 
 	//fmt.Printf("\n%+v\n", links)
-	return links, nil
+	return nil, nil
+}
+
+func dfs(node *html.Node, padding string) {
+	msg := node.Data
+	if node.Type == html.ElementNode {
+		msg = "<" + msg + ">"
+	}
+	fmt.Println(padding, msg)
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		dfs(c, padding+"  ")
+	}
 }
 
 // LinkParser searchs for links inside the three of the passed node.
