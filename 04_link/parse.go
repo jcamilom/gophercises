@@ -17,7 +17,7 @@ type Link struct {
 
 func main() {
 
-	r, err := os.Open("ex1.html")
+	r, err := os.Open("ex2.html")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,10 +59,24 @@ func LinkParser(node *html.Node, links *[]Link) {
 // Extracts the text inside the <a></a> element and returns it
 func extractTextFromLink(node *html.Node) (text string) {
 	for linkChild := node.FirstChild; linkChild != nil; linkChild = linkChild.NextSibling {
-		// TODO: the parent check is redundant
-		if trimedData := strings.TrimSpace(linkChild.Data); linkChild.Type == html.TextNode && linkChild.Parent.Data == "a" && len(trimedData) > 0 {
-			fmt.Printf("\n\ntext=%v, len=%v\n\n", trimedData, len(trimedData))
-			text += trimedData
+		if linkChild.Parent.Data == "a" {
+			fmt.Printf("==\n%+v\n==\nParentData: %v\n", linkChild, linkChild.Parent.Attr[0].Val)
+		}
+		if trimedData := strings.TrimSpace(linkChild.Data); linkChild.Type == html.TextNode && len(trimedData) > 0 {
+			//fmt.Printf("\n\ntext=%v, len=%v\n\n", trimedData, len(trimedData))
+			if text == "" {
+				text = trimedData
+			} else {
+				text += " " + trimedData
+			}
+			//fmt.Println(text)
+		}
+		if text2 := extractTextFromLink(linkChild); text2 != "" {
+			if text == "" {
+				text = text2
+			} else {
+				text += " " + text2
+			}
 		}
 	}
 	return
