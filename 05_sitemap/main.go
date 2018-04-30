@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"net/url"
@@ -9,15 +10,16 @@ import (
 )
 
 func main() {
-	URL := "http://www.calhoun.io/"
+	urlFlag := flag.String("url", "https://www.calhoun.io", "the url that you want to build a sitemap for")
+	flag.Parse()
 
 	// The parsed URL
-	parsedURL, err := url.Parse(URL)
+	parsedURL, err := url.Parse(*urlFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	resp, err := http.Get(URL)
+	resp, err := http.Get(*urlFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
