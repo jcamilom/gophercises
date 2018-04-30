@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	link "github.com/jcamilom/gophercises/04_link"
 )
@@ -13,18 +15,19 @@ func main() {
 	urlFlag := flag.String("url", "https://www.calhoun.io", "the url that you want to build a sitemap for")
 	flag.Parse()
 
-	// The parsed URL
-	parsedURL, err := url.Parse(*urlFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	resp, err := http.Get(*urlFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 	if resp.Status == "200 OK" {
+		reqUrl := resp.Request.URL
+		baseUrl := &url.URL{
+			Scheme: reqUrl.Scheme,
+			Host:   reqUrl.Host,
+		}
+		base := baseUrl.String()
+
 		links, err := link.Parse(resp.Body)
 		if err != nil {
 			log.Fatal(err)
@@ -32,7 +35,21 @@ func main() {
 		//fmt.Println("HTML:\n\n", string(body))
 		//fmt.Printf("\n%+v", links)
 
-		links = filterLinks(links, parsedURL)
+		var hrefs []string
+		for _, l := range links {
+			switch {
+			case strings.HasPrefix(l.Href, "/"):
+				hrefs = append(hrefs, base+l.Href)
+			case strings.HasPrefix(l.Href, "http"):
+				hrefs = append(hrefs, l.Href)
+			}
+		}
+
+		for _, href := range hrefs {
+			fmt.Println(href)
+		}
+
+		//links = filterLinks(links, parsedURL)
 
 		/* fmt.Println("====================")
 		fmt.Println(len(links), " links returned.")
