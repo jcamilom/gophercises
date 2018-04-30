@@ -44,6 +44,7 @@ func main() {
 	if err := enc.Encode(toXML); err != nil {
 		panic(err)
 	}
+	fmt.Println()
 }
 
 func bfs(urlStr string, maxDepth int) []string {
@@ -54,13 +55,18 @@ func bfs(urlStr string, maxDepth int) []string {
 	}
 	for i := 0; i <= maxDepth; i++ {
 		q, nq = nq, make(map[string]struct{})
+		if len(q) == 0 {
+			break
+		}
 		for url := range q {
 			if _, ok := seen[url]; ok {
 				continue
 			}
 			seen[url] = struct{}{}
 			for _, link := range get(url) {
-				nq[link] = struct{}{}
+				if _, ok := seen[link]; !ok {
+					nq[link] = struct{}{}
+				}
 			}
 		}
 	}
