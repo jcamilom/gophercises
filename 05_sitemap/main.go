@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -15,52 +16,59 @@ func main() {
 	urlFlag := flag.String("url", "https://www.calhoun.io", "the url that you want to build a sitemap for")
 	flag.Parse()
 
-	resp, err := http.Get(*urlFlag)
+	pages := get(*urlFlag)
+
+	for _, page := range pages {
+		fmt.Println(page)
+	}
+
+	//links = filterLinks(links, parsedURL)
+}
+
+func get(urlStr string) []string {
+	resp, err := http.Get(urlStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	if resp.Status == "200 OK" {
-		reqUrl := resp.Request.URL
-		baseUrl := &url.URL{
-			Scheme: reqUrl.Scheme,
-			Host:   reqUrl.Host,
+	reqURL := resp.Request.URL
+	baseURL := &url.URL{
+		Scheme: reqURL.Scheme,
+		Host:   reqURL.Host,
+	}
+	base := baseURL.String()
+
+	return filter(hrefs(resp.Body, base), withPrefix(base))
+}
+
+func hrefs(r io.Reader, base string) []string {
+	links, _ := link.Parse(r)
+
+	var ret []string
+	for _, l := range links {
+		switch {
+		case strings.HasPrefix(l.Href, "/"):
+			ret = append(ret, base+l.Href)
+		case strings.HasPrefix(l.Href, "http"):
+			ret = append(ret, l.Href)
 		}
-		base := baseUrl.String()
+	}
+	return ret
+}
 
-		links, err := link.Parse(resp.Body)
-		if err != nil {
-			log.Fatal(err)
+func filter(links []string, keepFn func(string) bool) []string {
+	var ret []string
+	for _, l := range links {
+		if keepFn(l) {
+			ret = append(ret, l)
 		}
-		//fmt.Println("HTML:\n\n", string(body))
-		//fmt.Printf("\n%+v", links)
+	}
+	return ret
+}
 
-		var hrefs []string
-		for _, l := range links {
-			switch {
-			case strings.HasPrefix(l.Href, "/"):
-				hrefs = append(hrefs, base+l.Href)
-			case strings.HasPrefix(l.Href, "http"):
-				hrefs = append(hrefs, l.Href)
-			}
-		}
-
-		for _, href := range hrefs {
-			fmt.Println(href)
-		}
-
-		//links = filterLinks(links, parsedURL)
-
-		/* fmt.Println("====================")
-		fmt.Println(len(links), " links returned.")
-		fmt.Println("====================") */
-
-		/* for _, l := range links {
-			fmt.Println("====================")
-			fmt.Println("Link: ", l.Href)
-			fmt.Println("Text: ", l.Text)
-			fmt.Println("====================")
-		} */
+func withPrefix(pfx string) func(string) bool {
+	return func(link string) bool {
+		return strings.HasPrefix(link, pfx)
 	}
 }
 
