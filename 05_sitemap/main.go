@@ -1,15 +1,28 @@
 package main
 
 import (
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	link "github.com/jcamilom/gophercises/04_link"
 )
+
+const xmlns = "http://www.sitemaps.org/schemas/sitemap/0.9"
+
+type loc struct {
+	Value string `xml:"loc"`
+}
+
+type urlset struct {
+	Urls  []loc  `xml:"url"`
+	Xmlns string `xml:"xmlns,attr"`
+}
 
 func main() {
 	urlFlag := flag.String("url", "https://www.calhoun.io", "the url that you want to build a sitemap for")
@@ -17,12 +30,20 @@ func main() {
 	flag.Parse()
 
 	pages := bfs(*urlFlag, *maxDepth)
-
+	toXML := urlset{
+		Urls:  make([]loc, 0, len(pages)),
+		Xmlns: xmlns,
+	}
 	for _, page := range pages {
-		fmt.Println(page)
+		toXML.Urls = append(toXML.Urls, loc{page})
 	}
 
-	//links = filterLinks(links, parsedURL)
+	fmt.Print(xml.Header)
+	enc := xml.NewEncoder(os.Stdout)
+	enc.Indent("", "  ")
+	if err := enc.Encode(toXML); err != nil {
+		panic(err)
+	}
 }
 
 func bfs(urlStr string, maxDepth int) []string {
