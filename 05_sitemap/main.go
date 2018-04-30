@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -14,9 +13,10 @@ import (
 
 func main() {
 	urlFlag := flag.String("url", "https://www.calhoun.io", "the url that you want to build a sitemap for")
+	maxDepth := flag.Int("depth", 3, "the maximun number of links deep to traverse")
 	flag.Parse()
 
-	pages := get(*urlFlag)
+	pages := bfs(*urlFlag, *maxDepth)
 
 	for _, page := range pages {
 		fmt.Println(page)
@@ -25,10 +25,35 @@ func main() {
 	//links = filterLinks(links, parsedURL)
 }
 
+func bfs(urlStr string, maxDepth int) []string {
+	seen := make(map[string]struct{})
+	var q map[string]struct{}
+	nq := map[string]struct{}{
+		urlStr: struct{}{},
+	}
+	for i := 0; i <= maxDepth; i++ {
+		q, nq = nq, make(map[string]struct{})
+		for url := range q {
+			if _, ok := seen[url]; ok {
+				continue
+			}
+			seen[url] = struct{}{}
+			for _, link := range get(url) {
+				nq[link] = struct{}{}
+			}
+		}
+	}
+	ret := make([]string, 0, len(seen))
+	for url := range seen {
+		ret = append(ret, url)
+	}
+	return ret
+}
+
 func get(urlStr string) []string {
 	resp, err := http.Get(urlStr)
 	if err != nil {
-		log.Fatal(err)
+		return []string{}
 	}
 	defer resp.Body.Close()
 	reqURL := resp.Request.URL
@@ -70,39 +95,4 @@ func withPrefix(pfx string) func(string) bool {
 	return func(link string) bool {
 		return strings.HasPrefix(link, pfx)
 	}
-}
-
-func filterLinks(links []link.Link, pageURL *url.URL) []link.Link {
-	// Variable where the filtered links are stored
-	var ret []link.Link
-	pageHostname := pageURL.Hostname()
-
-	/* fmt.Println("====================")
-	fmt.Println(len(links), " links received.")
-	fmt.Println("====================") */
-
-	for _, l := range links {
-		linkURL, err := url.Parse(l.Href)
-		if err != nil {
-			log.Fatal(err)
-		}
-		linkHostname := linkURL.Hostname()
-		linkPath := linkURL.EscapedPath()
-
-		/* fmt.Println("====================")
-		fmt.Println("linkHref: ", l.Href)
-		fmt.Println("linkText: ", l.Text)
-		fmt.Println("linkHostname: ", linkHostname)
-		fmt.Println("linkPath: ", linkURL.EscapedPath())
-		fmt.Println("pageHostname: ", pageHostname)
-		fmt.Println("====================") */
-
-		if linkHostname == pageHostname || (linkHostname == "" && len(linkPath) > 0) {
-			//fmt.Println("Adding: ", l.Href, l.Text)
-			ret = append(ret, l)
-		} else {
-			//fmt.Println("Removing: ", l.Href, l.Text)
-		}
-	}
-	return ret
 }
