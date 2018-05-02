@@ -1,16 +1,26 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
 )
 
 func main() {
-	st := "holaMundoDelCamelCase"
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter camelCase string: ")
+	st, err := reader.ReadString('\n')
+	if err != nil {
+		panic(err)
+	}
+	st = strings.TrimSuffix(st, "\n")
 	numberWords := countCamelCaseWords(st)
 	if numberWords == -1 {
-		fmt.Println("The string provided was empty.")
+		fmt.Println("The string provided is empty.")
 	} else {
-		fmt.Println(numberWords + 1)
+		fmt.Println(numberWords)
 	}
 }
 
@@ -19,8 +29,9 @@ func countCamelCaseWords(st string) int {
 		return -1
 	}
 	count := 0
-	for _, ch := range st {
-		if ch >= 65 && ch <= 90 {
+	for i, ch := range st {
+		// Check if the char is uppercase or if the first char is lowercase
+		if (ch >= 65 && ch <= 90) || (i == 0 && (ch >= 97 && ch <= 122)) {
 			count++
 		}
 	}
