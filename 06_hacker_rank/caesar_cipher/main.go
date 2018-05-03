@@ -20,6 +20,10 @@ func cipherString(st string, k int) string {
 	}
 	runes := []rune(st)
 	for i, ch := range runes {
+		// Check if the char is not a letter
+		if !(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z') {
+			continue
+		}
 		if newCh := ch + rune(k); (newCh >= 'a' && newCh <= 'z') || (newCh >= 'A' && newCh <= 'Z') {
 			runes[i] = newCh
 		} else {
