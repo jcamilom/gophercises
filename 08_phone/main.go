@@ -60,8 +60,47 @@ func main() {
 	phones, err := getAllPhones(db)
 	must(err)
 	for _, phone := range phones {
-		fmt.Printf("%+v\n", phone)
+		fmt.Printf("Workign on... %+v\n", phone)
+		number := normalize(phone.number)
+		if number != phone.number {
+			fmt.Println("Updating or removing...", number)
+			existing, err := findPhone(db, number)
+			must(err)
+			if existing != nil {
+				must(deletePhone(db, phone.id))
+			} else {
+				phone.number = number
+				must(updatPhone(db, phone))
+			}
+		} else {
+			fmt.Println("No changes required")
+		}
 	}
+}
+
+func deletePhone(db *sql.DB, id int) error {
+	statement := `DELETE FROM phone_numbers WHERE id=$1`
+	_, err := db.Exec(statement, id)
+	return err
+}
+
+func updatPhone(db *sql.DB, phone phoneNumber) error {
+	statement := `UPDATE phone_numbers SET value=$2 WHERE id=$1`
+	_, err := db.Exec(statement, phone.id, phone.number)
+	return err
+}
+
+func findPhone(db *sql.DB, number string) (*phoneNumber, error) {
+	var phone phoneNumber
+	err := db.QueryRow("SELECT * FROM phone_numbers WHERE value=$1", number).Scan(&phone.id, &phone.number)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+	return &phone, nil
 }
 
 func getPhone(db *sql.DB, id int) (string, error) {
