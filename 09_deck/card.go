@@ -16,6 +16,8 @@ const (
 	Jocker
 )
 
+var suits = [...]Suit{Spade, Diamond, Club, Heart}
+
 type Rank uint8
 
 const (
@@ -35,6 +37,11 @@ const (
 	King
 )
 
+const (
+	minRank = Ace
+	maxRank = King
+)
+
 type Card struct {
 	Suit
 	Rank
@@ -45,4 +52,14 @@ func (c Card) String() string {
 		return c.Suit.String()
 	}
 	return fmt.Sprintf("%s of %ss", c.Rank.String(), c.Suit.String())
+}
+
+func New() []Card {
+	theDeck := make([]Card, 0, ((len(suits)) * int((maxRank))))
+	for _, suit := range suits {
+		for rank := minRank; rank <= maxRank; rank++ {
+			theDeck = append(theDeck, Card{Suit: suit, Rank: rank})
+		}
+	}
+	return theDeck
 }
