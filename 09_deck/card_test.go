@@ -40,6 +40,19 @@ func TestSort(t *testing.T) {
 	cards := New(Sort(Less))
 	exp := Card{Rank: Ace, Suit: Spade}
 	if cards[0] != exp {
-		t.Error("Expected", exp, "as fist card. Received:", cards[0])
+		t.Error("Expected Ace of Spades as fist card. Received:", cards[0])
+	}
+}
+
+func TestJockers(t *testing.T) {
+	cards := New(Jockers(3))
+	count := 0
+	for _, c := range cards {
+		if c.Suit == Jocker {
+			count++
+		}
+	}
+	if count != 3 {
+		t.Error("Expected 3 Jockers, received: ", count)
 	}
 }

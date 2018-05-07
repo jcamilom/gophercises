@@ -101,3 +101,14 @@ func Shuffle(cards []Card) []Card {
 	}
 	return ret
 }
+func Jockers(n int) func([]Card) []Card {
+	return func(cards []Card) []Card {
+		for i := 0; i < n; i++ {
+			cards = append(cards, Card{
+				Suit: Jocker,
+				Rank: Rank(i),
+			})
+		}
+		return cards
+	}
+}
