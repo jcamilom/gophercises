@@ -112,3 +112,15 @@ func Jockers(n int) func([]Card) []Card {
 		return cards
 	}
 }
+
+func Filter(f func(card Card) bool) func([]Card) []Card {
+	return func(cards []Card) []Card {
+		var ret []Card
+		for _, c := range cards {
+			if !f(c) {
+				ret = append(ret, c)
+			}
+		}
+		return ret
+	}
+}
