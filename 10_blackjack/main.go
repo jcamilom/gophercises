@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/jcamilom/gophercises/09_deck"
@@ -52,8 +51,10 @@ func min(a, b int) int {
 }
 
 func main() {
-	theDeck := deck.New(deck.Deck(3), deck.Shuffle)
-	var card deck.Card
+	//theDeck := deck.New(deck.Deck(3), deck.Shuffle)
+	var gs GameState
+	gs.Deck = deck.New(deck.Deck(3), deck.Shuffle)
+	/* var card deck.Card
 	var playerH, dealerH Hand
 	for i := 0; i < 2; i++ {
 		for _, hand := range []*Hand{&playerH, &dealerH} {
@@ -94,10 +95,49 @@ func main() {
 		fmt.Println("You lose")
 	case dScore == pScore:
 		fmt.Println("Draw")
-	}
+	} */
 
 }
 
 func draw(d []deck.Card) (deck.Card, []deck.Card) {
 	return d[0], d[1:]
+}
+
+type State int8
+
+const (
+	StatePlayerTurn State = iota
+	StateDealerTurn
+	StateHandOver
+)
+
+type GameState struct {
+	Deck   []deck.Card
+	Turn   State
+	Player Hand
+	Dealer Hand
+}
+
+func (gs *GameState) CurrentPlayer() *Hand {
+	switch gs.Turn {
+	case StatePlayerTurn:
+		return &gs.Player
+	case StateDealerTurn:
+		return &gs.Player
+	default:
+		panic("it isn't currently any player's turn")
+	}
+}
+
+func clone(gs GameState) GameState {
+	ret := GameState{
+		Deck:   make([]deck.Card, len(gs.Deck)),
+		Turn:   gs.Turn,
+		Player: make(Hand, len(gs.Player)),
+		Dealer: make(Hand, len(gs.Dealer)),
+	}
+	copy(ret.Deck, gs.Deck)
+	copy(ret.Player, gs.Player)
+	copy(ret.Dealer, gs.Dealer)
+	return ret
 }
