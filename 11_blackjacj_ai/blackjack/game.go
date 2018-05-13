@@ -7,8 +7,7 @@ import (
 )
 
 const (
-	stateBet state = iota
-	statePlayerTurn
+	statePlayerTurn state = iota
 	stateDealerTurn
 	stateHandOver
 )
@@ -33,7 +32,7 @@ func New(opts Options) Game {
 	if opts.Hands == 0 {
 		opts.Hands = 100
 	}
-	if opts.BlackjackPayout == 0 {
+	if opts.BlackjackPayout == 0.0 {
 		opts.BlackjackPayout = 1.5
 	}
 	g.nDecks = opts.Decks
@@ -76,6 +75,14 @@ type hand struct {
 	bet   int
 }
 
+func bet(g *Game, ai AI, shuffled bool) {
+	bet := ai.Bet(shuffled)
+	if bet < 100 {
+		panic("bet must be at least 100")
+	}
+	g.playerBet = bet
+}
+
 func deal(g *Game) {
 	playerHand := make([]deck.Card, 0, 5)
 	g.handIdx = 0
@@ -96,18 +103,9 @@ func deal(g *Game) {
 	g.state = statePlayerTurn
 }
 
-func bet(g *Game, ai AI, shuffled bool) {
-	bet := ai.Bet(shuffled)
-	if bet < 100 {
-		panic("bet must be at least 100")
-	}
-	g.playerBet = bet
-}
-
 func (g *Game) Play(ai AI) int {
 	g.deck = nil
 	min := 52 * g.nDecks / 3
-
 	for i := 0; i < g.nHands; i++ {
 		shuffled := false
 		if len(g.deck) < min {
@@ -221,7 +219,7 @@ func endRound(g *Game, ai AI) {
 		case dBlackjack:
 			winnings = -winnings
 		case pBlackjack:
-			winnings *= int(float64(winnings) * g.blackjackPayout)
+			winnings = int(float64(winnings) * g.blackjackPayout)
 		case pScore > 21:
 			winnings = -winnings
 		case dScore > 21:
@@ -257,17 +255,17 @@ func Score(hand ...deck.Card) int {
 	return minScore
 }
 
-// Blackjack returns true if a hand is a blackjack
-func Blackjack(hand ...deck.Card) bool {
-	return len(hand) == 2 && Score(hand...) == 21
-}
-
 // Soft returns true if the score of a hand is a soft score - that is if an ace
 // is being counted as 11 points.
 func Soft(hand ...deck.Card) bool {
 	minScore := minScore(hand...)
 	score := Score(hand...)
 	return minScore != score
+}
+
+// Blackjack returns true if a hand is a blackjack
+func Blackjack(hand ...deck.Card) bool {
+	return len(hand) == 2 && Score(hand...) == 21
 }
 
 func minScore(hand ...deck.Card) int {

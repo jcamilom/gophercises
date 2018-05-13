@@ -71,7 +71,7 @@ func (ai humanAI) Play(hand []deck.Card, dealer deck.Card) Move {
 
 func (ai humanAI) Results(hands [][]deck.Card, dealer []deck.Card) {
 	fmt.Println("==FINAL HANDS==")
-	fmt.Println("Player: ")
+	fmt.Println("Player:")
 	for _, h := range hands {
 		fmt.Println(" ", h)
 	}
