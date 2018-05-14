@@ -8,22 +8,25 @@ import (
 )
 
 var re *regexp.Regexp
-var matchingRegexp, matchingString string
+var replaceString string
 
 func main() {
-	var err error
 	argsWithoutProg := os.Args[1:]
+	var err error
+	var matchingRegexp string
 
 	switch len(argsWithoutProg) {
 	case 2:
-		matchingRegexp, matchingString = argsWithoutProg[0], argsWithoutProg[1]
+		matchingRegexp, replaceString = argsWithoutProg[0], argsWithoutProg[1]
 	case 3:
-		matchingRegexp, matchingString = argsWithoutProg[1], argsWithoutProg[2]
+		matchingRegexp, replaceString = argsWithoutProg[1], argsWithoutProg[2]
 	default:
-		// exit
+		fmt.Println("Wrong usage")
+		//os.Exit(1)
 	}
 
 	matchingRegexp = "^(.+?) ([0-9]{4}) [(]([0-9]+) of ([0-9]+)[)][.](.+?)$"
+	replaceString = "$2 - $1 - $3 of $4.$5"
 	re, err = regexp.Compile(matchingRegexp)
 	if err != nil {
 		fmt.Println("There was an error with the provided regular expresion. See below for more info.")
@@ -40,23 +43,20 @@ func main() {
 		}
 		if info.IsDir() {
 			return nil
-		} else if match(info.Name()) {
-			/* if !info.IsDir() && info.Name() == filename { */
+		} else if re.MatchString(info.Name()) {
+			newName := re.ReplaceAllString(info.Name(), replaceString)
 			dir := filepath.Dir(path)
-			/* err := os.Rename(path, filepath.Join(dir, newname))
+			err := os.Rename(path, filepath.Join(dir, newName))
 			if err != nil {
-				panic(err)
-			} */
-			//fmt.Printf("File \"%s\" in \"%s\" renamed to \"%s\" correctly.\n", info.Name(), dir, "no didea")
-			fmt.Printf("File \"%s\" in \"%s\" matches the provided regexp\n", info.Name(), dir)
+				fmt.Println("There was an error renaming the file. See below for more info.")
+				fmt.Printf("\n%v\n\n", err)
+			}
+			fmt.Printf("File \"%s\" in \"%s\" renamed to \"%s\" correctly.\n", info.Name(), dir, newName)
+			//fmt.Printf("File \"%s\" in \"%s\" matches the provided regexp\n", info.Name(), dir)
 		}
 		return nil
 	})
 	if err != nil {
 		fmt.Printf("error walking the path %q: %v\n", dir, err)
 	}
-}
-
-func match(filename string) bool {
-	return re.MatchString(filename)
 }
