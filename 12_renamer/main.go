@@ -10,8 +10,7 @@ import (
 func main() {
 	argsWithoutProg := os.Args[1:]
 	var matchingRegexp, replaceString string
-	//dir := "dir/to/walk"
-	dir := "sample"
+	dir := "."
 
 	switch len(argsWithoutProg) {
 	case 2:
@@ -23,8 +22,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	//matchingRegexp = "^(.+?) ([0-9]{4}) [(]([0-9]+) of ([0-9]+)[)][.](.+?)$"
-	//replaceString = "$2 - $1 - $3 of $4.$5"
 	re, err := regexp.Compile(matchingRegexp)
 	if err != nil {
 		fmt.Println("There was an error with the provided regular expresion. See below for more info.")
@@ -33,7 +30,7 @@ func main() {
 
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", dir, err)
+			fmt.Printf("There was an error while accessing the path %q: %v\n", dir, err)
 			return err
 		}
 		if info.IsDir() {
